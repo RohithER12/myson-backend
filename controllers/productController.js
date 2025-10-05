@@ -187,7 +187,7 @@ exports.deleteProductImage = catchAsync(async (req, res, next) => {
     const { id } = req.params;
     const { imageUrl } = req.body; // get full URL from body
 
-    //console.log('👉 Image to delete:', imageUrl);
+    //console.log(' Image to delete:', imageUrl);
     const product = await Product.findById(id);
     if (!product) return next(new AppError('Product not found', 404));
 
