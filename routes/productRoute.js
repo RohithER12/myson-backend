@@ -30,7 +30,7 @@ router.post('/', upload.array('images', 10), addProduct);
 // Add images to product
 router.post('/:id/images', upload.array('images', 10), require('../controllers/productController').addProductImages);
 // Delete a specific image by filename
-router.delete('/:id/images/:imageName', require('../controllers/productController').deleteProductImage);
+router.delete('/:id/images', require('../controllers/productController').deleteProductImage);
 
 // Update product details (with images)
 router.put('/:id', upload.array('images', 10), updateProduct);

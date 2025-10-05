@@ -5,6 +5,7 @@ const AppError = require('../utils/errorHandler');
 const catchAsync = require('../utils/catchAsync');
 const path = require('path');
 const fs = require('fs');
+const cloudinary = require('../config/cloudinary'); // your cloudinary config
 
 
 // List products with pagination and filtering
@@ -57,7 +58,7 @@ exports.addProduct = catchAsync(async (req, res, next) => {
     if (!name || !description || !price || !category || !brand) {
         return next(new AppError('Missing required fields', 400));
     }
-    const images = req.files.map(f => f.filename);
+    const images = req.files.map(f => f.path);
     const product = await Product.create({
         name,
         description,
@@ -106,7 +107,7 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
 
     // Add new uploaded images
     if (req.files && req.files.length > 0) {
-        product.images.push(...req.files.map(f => f.filename));
+        product.images.push(...req.files.map(f => f.path));
     }
 
     // Update other fields
@@ -177,26 +178,32 @@ exports.addProductImages = catchAsync(async (req, res, next) => {
     if (!req.files || req.files.length === 0) {
         return next(new AppError('No images uploaded', 400));
     }
-    product.images.push(...req.files.map(f => f.filename));
+    product.images.push(...req.files.map(f => f.path));
     await product.save();
     res.json(product);
 });
 
 exports.deleteProductImage = catchAsync(async (req, res, next) => {
-    const { id, imageName } = req.params;
+    const { id } = req.params;
+    const { imageUrl } = req.body; // get full URL from body
+
+    //console.log('👉 Image to delete:', imageUrl);
     const product = await Product.findById(id);
     if (!product) return next(new AppError('Product not found', 404));
-    if (!product.images.includes(imageName)) {
-        return next(new AppError('Image not found in product', 404));
-    }
-    if (product.images.length <= 1) {
+
+    const imageIndex = product.images.findIndex(img => img === imageUrl);
+    if (imageIndex === -1) return next(new AppError('Image not found', 404));
+
+    if (product.images.length <= 1)
         return next(new AppError('A product must have at least one image', 400));
-    }
-    // Remove from array
-    product.images = product.images.filter(img => img !== imageName);
-    // Delete from disk
-    const imgPath = path.join(__dirname, '../public/images', imageName);
-    if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
+
+    // Remove image from array
+    product.images.splice(imageIndex, 1);
+
+    // Extract public_id from URL to delete from Cloudinary
+    const publicId = imageUrl.split('/').slice(-2).join('/').split('.')[0];
+    await cloudinary.uploader.destroy(publicId);
+
     await product.save();
     res.json(product);
 });
