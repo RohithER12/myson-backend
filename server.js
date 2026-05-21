@@ -11,6 +11,7 @@ const categoryRoutes = require('./routes/categoryRoute');
 const brandRoutes = require('./routes/brandRoute');
 const publicRoutes = require('./routes/publicRoute');
 const loginRoute = require('./routes/loginRoute');
+const healthRoute = require('./routes/healthRoute');
 
 const app = express();
 
@@ -28,6 +29,8 @@ app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/brands', brandRoutes);
 app.use('/api/v1/public', publicRoutes); // public content endpoints
+app.use('/api/v1/health', healthRoute);
+app.use('/health', healthRoute);
 
 // Error handling
 app.use(errorMiddleware);
