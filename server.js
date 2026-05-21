@@ -11,6 +11,7 @@ const categoryRoutes = require('./routes/categoryRoute');
 const brandRoutes = require('./routes/brandRoute');
 const publicRoutes = require('./routes/publicRoute');
 const loginRoute = require('./routes/loginRoute');
+const healthRoute = require('./routes/healthRoute');
 
 const app = express();
 
@@ -28,6 +29,8 @@ app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/brands', brandRoutes);
 app.use('/api/v1/public', publicRoutes); // public content endpoints
+app.use('/api/v1/health', healthRoute);
+app.use('/health', healthRoute);
 
 // Error handling
 app.use(errorMiddleware);
@@ -45,5 +48,22 @@ app.listen(PORT, "0.0.0.0", () => {
         timeZone: "Asia/Kolkata"
     }));
     console.info(`Server running on port ${PORT}`);
+
+    // Self-ping mechanism to keep the server awake (e.g. on Render)
+    const BACKEND_URL = process.env.BACKEND_URL;
+    if (BACKEND_URL) {
+        const pingUrl = `${BACKEND_URL}/api/v1/health`;
+        console.log(`Self-ping configured for: ${pingUrl} (every 40 seconds)`);
+        setInterval(async () => {
+            try {
+                const response = await fetch(pingUrl);
+                console.log(`Self-ping status: ${response.status} @ ${new Date().toISOString()}`);
+            } catch (error) {
+                console.error(`Self-ping failed: ${error.message}`);
+            }
+        }, 40000);
+    } else {
+        console.log('Self-ping disabled: BACKEND_URL environment variable is not defined.');
+    }
 });
 

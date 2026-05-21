@@ -126,6 +126,56 @@ components:
 security:
     - bearerAuth: []
 paths:
+    /health:
+        get:
+            summary: Check server and database health
+            tags: [Health]
+            security: []
+            responses:
+                '200':
+                    description: Server is healthy and database is connected
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: UP
+                                    timestamp:
+                                        type: string
+                                        format: date-time
+                                    uptime:
+                                        type: number
+                                        example: 12.34
+                                    services:
+                                        type: object
+                                        properties:
+                                            database:
+                                                type: string
+                                                example: connected
+                '503':
+                    description: Service is unhealthy or database is disconnected
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: DOWN
+                                    timestamp:
+                                        type: string
+                                        format: date-time
+                                    uptime:
+                                        type: number
+                                        example: 12.34
+                                    services:
+                                        type: object
+                                        properties:
+                                            database:
+                                                type: string
+                                                example: disconnected
     /login:
         post:
             summary: Admin login
